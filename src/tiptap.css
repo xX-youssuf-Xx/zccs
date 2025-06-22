@@ -1,0 +1,17 @@
+/* Basic styles for TipTap editor */
+.tiptap {
+  min-height: 120px;
+  outline: none;
+  padding: 8px;
+  background: #fff;
+  border-radius: 4px;
+}
+.tiptap p {
+  margin: 0;
+}
+.tiptap img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 8px 0;
+} 
