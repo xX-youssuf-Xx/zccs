@@ -37,11 +37,28 @@ export default function Blog() {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 24, padding: '32px 0', boxSizing: 'border-box' }}>
       {posts.map(post => (
         <div
           key={post.id}
-          style={{ background: '#fff', borderRadius: 12, boxShadow: '0 2px 8px #0001', padding: 24, width: '100%', maxWidth: '100%', minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: 'flex-start', position: 'relative', cursor: 'pointer', transition: 'box-shadow 0.2s', border: '1px solid #f0f0f0' }}
+          style={{
+            background: '#fff',
+            borderRadius: 12,
+            boxShadow: '0 2px 8px #0001',
+            padding: 24,
+            width: '100%',
+            maxWidth: 700,
+            minWidth: 0,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'flex-start',
+            position: 'relative',
+            cursor: 'pointer',
+            transition: 'box-shadow 0.2s',
+            border: '1px solid #f0f0f0',
+            margin: '0 auto 16px auto', // Center and space out
+            boxSizing: 'border-box',
+          }}
           onClick={() => navigate(`/blog/${post.id}`)}
         >
           <div style={{ display: 'flex', alignItems: 'center', width: '100%' }}>
@@ -53,6 +70,16 @@ export default function Blog() {
           </div>
         </div>
       ))}
+      <style>
+        {`
+          @media (max-width: 800px) {
+            .blog-card {
+              max-width: 98vw !important;
+              padding: 16px !important;
+            }
+          }
+        `}
+      </style>
     </div>
   );
 } 

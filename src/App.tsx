@@ -13,9 +13,9 @@ import Footer from './Footer';
 
 function App() {
   return (
-    <div style={{ minHeight: '100vh', background: '#fff', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ minHeight: '100vh', background: '#f0f0f0', display: 'flex', flexDirection: 'column' }}>
       <Navbar />
-      <div style={{ flex: 1, width: '100%', maxWidth: 900, margin: '0 auto', padding: '2rem 1rem', boxSizing: 'border-box' }}>
+      <div style={{ flex: 1, width: '100%',  margin: '0 auto',  boxSizing: 'border-box' }}>
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/about" element={<About />} />

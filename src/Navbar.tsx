@@ -5,27 +5,32 @@ export default function Navbar() {
     <nav style={{
       width: '100%',
       background: '#fff',
-      borderBottom: '1px solid #e0e0e0',
+      borderBottom: '1px solid #f2f2f2',
       display: 'flex',
       alignItems: 'center',
-      justifyContent: 'space-around',
+      justifyContent: 'space-between',
       height: 64,
       position: 'sticky',
       top: 0,
       zIndex: 100,
+      fontFamily: 'Inter, Noto Sans, Arial, sans-serif',
+      fontSize: 20,
+      fontWeight: 500,
+      color: '#111',
+      padding: '0 40px',
     }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-        <div style={{ width:70, height:70, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: 22 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 14, paddingLeft: 8 }}>
+        <div style={{ width: 36, height: 36, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fff' }}>
           <img src="/logo.png" alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
         </div>
-        <span style={{ fontWeight: 700, fontSize: 22, color: '#222', marginLeft: 8 }}>ZCCS Club</span>
+        <span style={{ fontWeight: 900, fontSize: 24, color: '#111', letterSpacing: '-0.02em', fontFamily: 'Inter, Noto Sans, Arial, sans-serif' }}>ZCCS</span>
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 32 }}>
-        <Link to="/" style={{ color: '#646cff', textDecoration: 'none', fontWeight: 500, fontSize: 18 }}>Home</Link>
-        <Link to="/about" style={{ color: '#646cff', textDecoration: 'none', fontWeight: 500, fontSize: 18 }}>About</Link>
-        <Link to="/team" style={{ color: '#646cff', textDecoration: 'none', fontWeight: 500, fontSize: 18 }}>Team</Link>
-        <Link to="/blog" style={{ color: '#646cff', textDecoration: 'none', fontWeight: 500, fontSize: 18 }}>Blog</Link>
-        <Link to="/publications" style={{ color: '#646cff', textDecoration: 'none', fontWeight: 500, fontSize: 18 }}>Publications</Link>
+        <Link to="/" style={{ color: '#111', textDecoration: 'none', fontWeight: 500, fontSize: 18, fontFamily: 'inherit' }}>Home</Link>
+        <Link to="/about" style={{ color: '#111', textDecoration: 'none', fontWeight: 500, fontSize: 18, fontFamily: 'inherit' }}>About</Link>
+        <Link to="/team" style={{ color: '#111', textDecoration: 'none', fontWeight: 500, fontSize: 18, fontFamily: 'inherit' }}>Team</Link>
+        <Link to="/blog" style={{ color: '#111', textDecoration: 'none', fontWeight: 500, fontSize: 18, fontFamily: 'inherit' }}>Blog</Link>
+        <Link to="/publications" style={{ color: '#111', textDecoration: 'none', fontWeight: 500, fontSize: 18, fontFamily: 'inherit' }}>Publications</Link>
       </div>
     </nav>
   );

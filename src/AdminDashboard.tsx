@@ -30,6 +30,15 @@ function useCollection(name: CollectionType): [Item[], React.Dispatch<React.SetS
   return [items, setItems, fetchItems];
 }
 
+// Add PublicationItem type
+type PublicationItem = {
+  id?: string;
+  title: string;
+  viewUrl: string;
+  downloadUrl: string;
+  createdAt?: any;
+};
+
 export default function AdminDashboard() {
   const [tab, setTab] = useState<CollectionType>('blog');
   const [search, setSearch] = useState('');
@@ -100,7 +109,7 @@ function AdminTabs({ tab, setTab }: { tab: CollectionType, setTab: (t: Collectio
         >
           {t.charAt(0).toUpperCase() + t.slice(1)}
         </button>
-      ))}
+      ))} 
     </div>
   );
 }
@@ -152,16 +161,36 @@ function AdminSection({ type, search, onEdit }: { type: CollectionType, search: 
   );
 }
 
-function AdminModal({ type, item, onClose, onDone }: { type: CollectionType, item: Item | null, onClose: () => void, onDone: () => void }) {
-  const [form, setForm] = useState<Item>(item || { title: '', content: '', images: [] });
+function AdminModal({ type, item, onClose, onDone }: { type: CollectionType, item: Item | PublicationItem | null, onClose: () => void, onDone: () => void }) {
+  // Blog state
+  const [form, setForm] = useState<Item>(item && type === 'blog'
+    ? (item as Item)
+    : { title: '', content: '', images: [] }
+  );
+  // Publication state
+  const [pubForm, setPubForm] = useState<PublicationItem>(item && type === 'publications'
+    ? (item as PublicationItem)
+    : { title: '', viewUrl: '', downloadUrl: '' }
+  );
   const [uploading, setUploading] = useState(false);
+  const [file, setFile] = useState<File | null>(null);
+
+  // Blog editor
   const [showImageDialog, setShowImageDialog] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [highlightColor, setHighlightColor] = useState('#ffff00');
   const [imageWidth, setImageWidth] = useState('300');
   const [imageHeight, setImageHeight] = useState('auto');
   const editor = useEditor({
-    extensions: [StarterKit, Image, Highlight.configure({ multicolor: true }), LinkExtension.configure({ openOnClick: true, HTMLAttributes: { target: '_blank', rel: 'noopener noreferrer' } })],
+    extensions: [
+      StarterKit,
+      Image,
+      Highlight.configure({ multicolor: true }),
+      LinkExtension.configure({
+        openOnClick: true,
+        HTMLAttributes: { target: '_blank', rel: 'noopener noreferrer' },
+      }),
+    ],
     content: form.content,
     editorProps: {
       attributes: {
@@ -170,7 +199,7 @@ function AdminModal({ type, item, onClose, onDone }: { type: CollectionType, ite
       },
     },
     onUpdate: ({ editor }: { editor: any }) => {
-      setForm(f => ({ ...f, content: editor.getHTML() }));
+      setForm((f) => ({ ...f, content: editor.getHTML() }));
     },
   });
   useEffect(() => {
@@ -179,24 +208,24 @@ function AdminModal({ type, item, onClose, onDone }: { type: CollectionType, ite
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [item]);
-  // Toolbar for TipTap
-  const MenuBar = useCallback(() => (
-    <div style={{ marginBottom: 8, display: 'flex', gap: 8, alignItems: 'center', background: '#f7f7fa', borderRadius: 6, padding: '6px 10px', border: '1px solid #e0e0e0', flexWrap: 'wrap' }}>
-      <button type="button" title="Bold" onClick={() => editor?.chain().focus().toggleBold().run()} disabled={!editor?.can().chain().focus().toggleBold().run()} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, color: '#646cff' }}><FaBold /></button>
-      <button type="button" title="Italic" onClick={() => editor?.chain().focus().toggleItalic().run()} disabled={!editor?.can().chain().focus().toggleItalic().run()} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, color: '#646cff' }}><FaItalic /></button>
-      <button type="button" title="Bullet List" onClick={() => editor?.chain().focus().toggleBulletList().run()} disabled={!editor} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, color: '#646cff' }}><FaListUl /></button>
-      <button type="button" title="Highlight" onMouseDown={e => e.preventDefault()} onClick={() => editor?.chain().focus().toggleHighlight({ color: highlightColor }).run()} disabled={!editor} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, color: highlightColor }}><FaHighlighter /></button>
-      <input type="color" value={highlightColor} onChange={e => setHighlightColor(e.target.value)} style={{ width: 24, height: 24, border: 'none', background: 'none', cursor: 'pointer', marginLeft: 4, marginRight: 8 }} title="Highlight color" onMouseDown={e => e.stopPropagation()} />
-      <button type="button" title="Insert Link" onClick={() => {
-        const text = prompt('Text for link:');
-        if (!text) return;
-        const url = prompt('URL:');
-        if (!url) return;
-        editor?.chain().focus().insertContent(`<a href='${url}' target='_blank' rel='noopener noreferrer'>${text}</a>`).run();
-      }} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, color: '#646cff' }}>🔗</button>
-      <button type="button" title="Insert Image" onClick={() => setShowImageDialog(true)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, color: '#646cff' }}><FaImage /></button>
-    </div>
-  ), [editor, highlightColor]);
+
+  // Publication file handlers
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) setFile(e.target.files[0]);
+  };
+  const handleFileUpload = async () => {
+    if (!file) return;
+    setUploading(true);
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+    const res = await fetch(CLOUDINARY_UPLOAD_URL, { method: 'POST', body: formData });
+    const data = await res.json();
+    setPubForm((f) => ({ ...f, downloadUrl: data.secure_url }));
+    setUploading(false);
+  };
+
+  // Blog image handlers
   const handleImageDialogChange = (e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       setImageFile(e.target.files[0]);
@@ -216,34 +245,122 @@ function AdminModal({ type, item, onClose, onDone }: { type: CollectionType, ite
     if (editor) {
       editor.chain().focus().setImage({ src: data.secure_url }).run();
     }
-    setForm(f => ({ ...f, images: [...f.images, data.secure_url] }));
+    setForm((f) => ({ ...f, images: [...f.images, data.secure_url] }));
     setUploading(false);
     setShowImageDialog(false);
     setImageFile(null);
     setImageWidth('300');
     setImageHeight('auto');
   };
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+
+  // Blog form submit
+  const handleBlogSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (item && item.id) {
       await updateDoc(doc(db, type, item.id), form as any);
     } else {
-      await addDoc(collection(db, type), form as any);
+      await addDoc(collection(db, type), { ...form, createdAt: new Date() });
     }
     setForm({ title: '', content: '', images: [] });
     if (editor) editor.commands.setContent('');
     onDone();
   };
-  const handleClose = () => {
+
+  // Publication form submit
+  const handlePubSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (item && item.id) {
+      await updateDoc(doc(db, type, item.id), { ...pubForm });
+    } else {
+      await addDoc(collection(db, type), { ...pubForm, createdAt: new Date() });
+    }
+    setPubForm({ title: '', viewUrl: '', downloadUrl: '' });
+    onDone();
+  };
+
+  // Close handlers
+  const handleBlogClose = () => {
     setForm({ title: '', content: '', images: [] });
     if (editor) editor.commands.setContent('');
     onClose();
   };
+  const handlePubClose = () => {
+    setPubForm({ title: '', viewUrl: '', downloadUrl: '' });
+    onClose();
+  };
+
+  // Blog editor toolbar
+  const MenuBar = useCallback(
+    () => (
+      <div style={{ marginBottom: 8, display: 'flex', gap: 8, alignItems: 'center', background: '#f7f7fa', borderRadius: 6, padding: '6px 10px', border: '1px solid #e0e0e0', flexWrap: 'wrap' }}>
+        <button type="button" title="Bold" onClick={() => editor?.chain().focus().toggleBold().run()} disabled={!editor?.can().chain().focus().toggleBold().run()} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, color: '#646cff' }}><FaBold /></button>
+        <button type="button" title="Italic" onClick={() => editor?.chain().focus().toggleItalic().run()} disabled={!editor?.can().chain().focus().toggleItalic().run()} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, color: '#646cff' }}><FaItalic /></button>
+        <button type="button" title="Bullet List" onClick={() => editor?.chain().focus().toggleBulletList().run()} disabled={!editor} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, color: '#646cff' }}><FaListUl /></button>
+        <button type="button" title="Highlight" onMouseDown={e => e.preventDefault()} onClick={() => editor?.chain().focus().toggleHighlight({ color: highlightColor }).run()} disabled={!editor} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, color: highlightColor }}><FaHighlighter /></button>
+        <input type="color" value={highlightColor} onChange={e => setHighlightColor(e.target.value)} style={{ width: 24, height: 24, border: 'none', background: 'none', cursor: 'pointer', marginLeft: 4, marginRight: 8 }} title="Highlight color" onMouseDown={e => e.stopPropagation()} />
+        <button type="button" title="Insert Link" onClick={() => {
+          const text = prompt('Text for link:');
+          if (!text) return;
+          const url = prompt('URL:');
+          if (!url) return;
+          editor?.chain().focus().insertContent(`<a href='${url}' target='_blank' rel='noopener noreferrer'>${text}</a>`).run();
+        }} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, color: '#646cff' }}>🔗</button>
+        <button type="button" title="Insert Image" onClick={() => setShowImageDialog(true)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, color: '#646cff' }}><FaImage /></button>
+      </div>
+    ),
+    [editor, highlightColor]
+  );
+
+  // Render
+  if (type === 'publications') {
+    return (
+      <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(30,30,40,0.18)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ background: '#fff', borderRadius: 12, boxShadow: '0 2px 16px #0002', padding: 32, minWidth: 340, maxWidth: 540, width: '100%', position: 'relative', boxSizing: 'border-box' }}>
+          <h2 style={{ margin: 0, marginBottom: 16, color: '#646cff', fontWeight: 700 }}>{item ? 'Edit' : 'New'} Publication</h2>
+          <form onSubmit={handlePubSubmit}>
+            <input
+              type="text"
+              placeholder="Title"
+              value={pubForm.title}
+              onChange={e => setPubForm(f => ({ ...f, title: e.target.value }))}
+              required
+              style={{ display: 'block', marginBottom: 8, width: '100%', fontSize: 20, fontWeight: 600, color: '#222', border: '1px solid #e0e0e0', borderRadius: 4, padding: 8, background: '#f7f7fa' }}
+            />
+            <input
+              type="text"
+              placeholder="View Link (URL)"
+              value={pubForm.viewUrl}
+              onChange={e => setPubForm(f => ({ ...f, viewUrl: e.target.value }))}
+              required
+              style={{ display: 'block', marginBottom: 8, width: '100%', fontSize: 16, border: '1px solid #e0e0e0', borderRadius: 4, padding: 8, background: '#f7f7fa' }}
+            />
+            <input
+              type="text"
+              placeholder="Download Link (URL) or upload file below"
+              value={pubForm.downloadUrl}
+              onChange={e => setPubForm(f => ({ ...f, downloadUrl: e.target.value }))}
+              style={{ display: 'block', marginBottom: 8, width: '100%', fontSize: 16, border: '1px solid #e0e0e0', borderRadius: 4, padding: 8, background: '#f7f7fa' }}
+            />
+            <input type="file" accept="application/pdf" onChange={handleFileChange} style={{ marginBottom: 8 }} />
+            <button type="button" onClick={handleFileUpload} disabled={!file || uploading} style={{ marginBottom: 8 }}>
+              {uploading ? 'Uploading...' : 'Upload PDF to Cloudinary'}
+            </button>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, marginTop: 16 }}>
+              <button type="button" onClick={handlePubClose} style={{ background: '#eee', color: '#333', border: 'none', borderRadius: 4, padding: '10px 24px', fontWeight: 600, fontSize: 16, cursor: 'pointer' }}>Cancel</button>
+              <button type="submit" disabled={uploading} style={{ background: '#646cff', color: '#fff', border: 'none', borderRadius: 4, padding: '10px 24px', fontWeight: 600, fontSize: 16, cursor: 'pointer' }}>{item ? 'Update' : 'Create'}</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
+  // Blog modal (default)
   return (
     <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(30,30,40,0.18)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <div style={{ background: '#fff', borderRadius: 12, boxShadow: '0 2px 16px #0002', padding: 32, minWidth: 340, maxWidth: 540, width: '100%', position: 'relative', boxSizing: 'border-box' }}>
-        <h2 style={{ margin: 0, marginBottom: 16, color: '#646cff', fontWeight: 700 }}>{item ? 'Edit' : 'New'} {type.slice(0, -1).charAt(0).toUpperCase() + type.slice(1, -1).slice(1)}</h2>
-        <form onSubmit={handleSubmit}>
+        <h2 style={{ margin: 0, marginBottom: 16, color: '#646cff', fontWeight: 700 }}>{item ? 'Edit' : 'New'} Blog</h2>
+        <form onSubmit={handleBlogSubmit}>
           <input
             type="text"
             placeholder="Title"
@@ -280,11 +397,11 @@ function AdminModal({ type, item, onClose, onDone }: { type: CollectionType, ite
             </div>
           )}
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, marginTop: 16 }}>
-            <button type="button" onClick={handleClose} style={{ background: '#eee', color: '#333', border: 'none', borderRadius: 4, padding: '10px 24px', fontWeight: 600, fontSize: 16, cursor: 'pointer' }}>Cancel</button>
+            <button type="button" onClick={handleBlogClose} style={{ background: '#eee', color: '#333', border: 'none', borderRadius: 4, padding: '10px 24px', fontWeight: 600, fontSize: 16, cursor: 'pointer' }}>Cancel</button>
             <button type="submit" disabled={uploading} style={{ background: '#646cff', color: '#fff', border: 'none', borderRadius: 4, padding: '10px 24px', fontWeight: 600, fontSize: 16, cursor: 'pointer' }}>{item ? 'Update' : 'Create'}</button>
           </div>
         </form>
       </div>
     </div>
   );
-} 
+}
