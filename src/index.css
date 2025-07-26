@@ -1,10 +1,96 @@
-html, body {
+html,
+body {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
   background: #f0f0f0;
 }
 
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: inherit;
+}
+
+.zccs-dropdown-buttons {
+  display: flex;
+  flex-direction: row;
+
+  justify-content: center;
+  gap: 10px;
+}
+
+/* Dropdown button */
+.dropdown-btn {
+  background-color: #007acc;
+  color: white;
+  width: 100%;
+  padding: 12px 16px;
+  border: none;
+  border-radius: 6px;
+  font-size: 1.1rem;
+  cursor: pointer;
+  text-align: left;
+  transition: background-color 0.2s ease-in-out;
+}
+
+.dropdown-btn:hover {
+  background-color: #005fa3;
+}
+
+/* Container that controls smooth open/close */
+.dropdown-content-wrapper {
+  overflow: hidden;
+  transition: max-height 0.4s ease, opacity 0.4s ease;
+  max-height: 0;
+  opacity: 0;
+}
+
+/* When active */
+.dropdown-content-wrapper.show {
+  max-height: 500px; /* Large enough to fit all content */
+  opacity: 1;
+}
+
+/* Dropdown content block */
+.dropdown-content {
+  background-color: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 10px;
+  margin-top: 0.5rem;
+}
+
+/* Each dropdown item */
+.dropdown-item {
+  padding: 10px 0;
+  border-bottom: 1px solid #eaeaea;
+}
+
+.dropdown-item:last-child {
+  border-bottom: none;
+}
+
+.dropdown-item strong {
+  display: block;
+  font-size: 1.05rem;
+  margin-bottom: 4px;
+}
+
+.dropdown-item p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #333;
+}
+
+.dropdown-item a {
+  display: inline-block;
+  margin-top: 4px;
+  font-size: 0.85rem;
+  color: #007acc;
+  text-decoration: none;
+}
+
+.dropdown-item a:hover {
+  text-decoration: underline;
 }

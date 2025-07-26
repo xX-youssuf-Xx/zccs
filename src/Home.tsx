@@ -1,6 +1,53 @@
-export default function Home() {  return (
-    <div className="zccs-home-root">
+import { useEffect, useState } from "react";
+import {
+  getFirestore,
+  collection,
+  getDocs,
+  query,
+  limit,
+} from "firebase/firestore";
+import { app } from "./firebase"; // adjust path based on your project
 
+import "./index.css";
+
+export default function Home() {
+  const db = getFirestore(app);
+
+  type Publication = {
+    id: string;
+    title?: string;
+    summary?: string;
+    link?: string;
+  };
+  type Blog = { id: string; title?: string; summary?: string; link?: string };
+
+  const [publications, setPublications] = useState<Publication[]>([]);
+  const [blogs, setBlogs] = useState<Blog[]>([]);
+
+  useEffect(() => {
+    const fetchPublications = async () => {
+      const q = query(collection(db, "publications"), limit(3));
+      const snapshot = await getDocs(q);
+      const items = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      setPublications(items);
+    };
+
+    const fetchBlogs = async () => {
+      const q = query(collection(db, "blog"), limit(3));
+      const snapshot = await getDocs(q);
+      const items = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      setBlogs(items);
+    };
+
+    fetchPublications();
+    fetchBlogs();
+  }, [db]);
+
+  const [showPublications, setShowPublications] = useState(false);
+  const [showBlogs, setShowBlogs] = useState(false);
+
+  return (
+    <div className="zccs-home-root">
       <div className="zccs-layout-container">
         <div className="zccs-main-content">
           <div className="zccs-content-container">
@@ -9,7 +56,9 @@ export default function Home() {  return (
                 <div className="zccs-hero-texts">
                   <h1>Igniting Minds, Shaping the Future</h1>
                   <h2>
-                    Zewail City Computer Science Club (ZCCS) is a hub for computer science, math, AI, and research enthusiasts. Join us to explore, learn, and innovate.
+                    Zewail City Computer Science Club (ZCCS) is a hub for
+                    computer science, math, AI, and research enthusiasts. Join
+                    us to explore, learn, and innovate.
                   </h2>
                 </div>
                 <button className="zccs-explore-btn">
@@ -19,41 +68,115 @@ export default function Home() {  return (
             </div>
             <h2 className="zccs-section-title">About Us</h2>
             <p className="zccs-section-desc">
-              ZCCS is a vibrant community dedicated to fostering a deep understanding of computer science, mathematics, and artificial intelligence. We provide a platform for
-              students to engage with cutting-edge research, collaborate on projects, and expand their knowledge through workshops, seminars, and discussions.
+              ZCCS is a vibrant community dedicated to fostering a deep
+              understanding of computer science, mathematics, and artificial
+              intelligence. We provide a platform for students to engage with
+              cutting-edge research, collaborate on projects, and expand their
+              knowledge through workshops, seminars, and discussions.
             </p>
             <div className="zccs-resources-section">
               <div className="zccs-resources-header">
                 <h1>Explore Our Resources</h1>
-                <p>Dive into our publications and blogs to discover the latest research and insights from our community.</p>
+                <p>
+                  Dive into our publications and blogs to discover the latest
+                  research and insights from our community.
+                </p>
                 <button className="zccs-viewall-btn">
                   <span>View All</span>
                 </button>
               </div>
               <div className="zccs-resource-cards">
                 <div className="zccs-resource-card">
-                  <div className="zccs-resource-img" style={{backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuD4lpjhcwiIrZ0DW9r9QImZIxfi5T8xX5gcpQFYvUX6aKUWGeXQ2YJgknkW2BYm5y8qD2Y5WByAAYT-VJ5udzP1a2aSb7sXNmcfqicH6sSCHRlDIu0GdDYN2cEfcYjzEegcxJlet5PjGixD4XIVR5Wd9CSPs5-R4Or_hYuUw-BuwVIvCl2qfcS7GO79woVuNHqA9Te0-fJKdMCr_zaKVTHbwb1QNLEd4djlpXuWnAS-JkfvOtO9YoFdjcft7KsyKQxUS-U3IL69Hl0")'}}></div>
+                  <div
+                    className="zccs-resource-img"
+                    style={{
+                      backgroundImage:
+                        'url("https://lh3.googleusercontent.com/aida-public/AB6AXuD4lpjhcwiIrZ0DW9r9QImZIxfi5T8xX5gcpQFYvUX6aKUWGeXQ2YJgknkW2BYm5y8qD2Y5WByAAYT-VJ5udzP1a2aSb7sXNmcfqicH6sSCHRlDIu0GdDYN2cEfcYjzEegcxJlet5PjGixD4XIVR5Wd9CSPs5-R4Or_hYuUw-BuwVIvCl2qfcS7GO79woVuNHqA9Te0-fJKdMCr_zaKVTHbwb1QNLEd4djlpXuWnAS-JkfvOtO9YoFdjcft7KsyKQxUS-U3IL69Hl0")',
+                    }}
+                  ></div>
                   <div>
                     <p className="zccs-resource-title">Publications</p>
-                    <p className="zccs-resource-desc">Access our collection of research papers and articles.</p>
+                    <p className="zccs-resource-desc">
+                      Access our collection of research papers and articles.
+                    </p>
                   </div>
                 </div>
                 <div className="zccs-resource-card">
-                  <div className="zccs-resource-img" style={{backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuCTd7pXS2iCA15eRUeT6T8HB2tGFpSQ_N4EG37_GkuJrrcivWwXTXW2pu4xiAiPM5VXGGL2XJm8Js-usjFqZQVrwz0zjui2c8WN9ZafymXnOBrzIeh57VmObysfUv3WfOekvmKYbVwjQ_in36vBOoms00iTBfpiOe-p3FUsTxtGSMR9BJ9RWwnn7LHlSowzFQ0oQtBA2VsMy3rwYaFIi9Elg0CE-ldMND35VXyua6mT7_50eDGo1I9HC55oAs-02MfQA8dW_luVIG4")'}}></div>
+                  <div
+                    className="zccs-resource-img"
+                    style={{
+                      backgroundImage:
+                        'url("https://lh3.googleusercontent.com/aida-public/AB6AXuCTd7pXS2iCA15eRUeT6T8HB2tGFpSQ_N4EG37_GkuJrrcivWwXTXW2pu4xiAiPM5VXGGL2XJm8Js-usjFqZQVrwz0zjui2c8WN9ZafymXnOBrzIeh57VmObysfUv3WfOekvmKYbVwjQ_in36vBOoms00iTBfpiOe-p3FUsTxtGSMR9BJ9RWwnn7LHlSowzFQ0oQtBA2VsMy3rwYaFIi9Elg0CE-ldMND35VXyua6mT7_50eDGo1I9HC55oAs-02MfQA8dW_luVIG4")',
+                    }}
+                  ></div>
                   <div>
                     <p className="zccs-resource-title">Blogs</p>
-                    <p className="zccs-resource-desc">Read our latest blog posts on various topics.</p>
+                    <p className="zccs-resource-desc">
+                      Read our latest blog posts on various topics.
+                    </p>
                   </div>
                 </div>
               </div>
             </div>
-            <div className="zccs-bottom-btns">
+            {/* <div className="zccs-bottom-btns">
               <button className="zccs-bottom-btn zccs-bottom-btn-black" onClick={() => window.location.href = '/publications'}>
                 <span>Publications</span>
               </button>
               <button className="zccs-bottom-btn zccs-bottom-btn-light" onClick={() => window.location.href = '/blog'}>
                 <span>Blogs</span>
               </button>
+            </div> */}
+
+            <div className="zccs-dropdown-buttons">
+              <div className="dropdown-section">
+                <button
+                  className="dropdown-btn"
+                  onClick={() => setShowPublications(!showPublications)}
+                >
+                  Publications ▼
+                </button>
+
+                <div
+                  className={`dropdown-content-wrapper ${
+                    showPublications ? "show" : ""
+                  }`}
+                >
+                  <div className="dropdown-content">
+                    {publications.map((item, index) => (
+                      <div key={index} className="dropdown-item">
+                        <strong>{item.title}</strong>
+                        <p>{item.summary}</p>
+                        <a href={item.link}>Read more</a>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="dropdown-section">
+                <button
+                  className="dropdown-btn"
+                  onClick={() => setShowBlogs(!showBlogs)}
+                >
+                  Blogs ▼
+                </button>
+
+                <div
+                  className={`dropdown-content-wrapper ${
+                    showBlogs ? "show" : ""
+                  }`}
+                >
+                  <div className="dropdown-content">
+                    {blogs.map((item, index) => (
+                      <div key={index} className="dropdown-item">
+                        <strong>{item.title}</strong>
+                        <p>{item.summary}</p>
+                        <a href={item.link}>Read more</a>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -376,4 +499,4 @@ export default function Home() {  return (
       `}</style>
     </div>
   );
-} 
+}
