@@ -9,6 +9,7 @@ import Highlight from '@tiptap/extension-highlight';
 import LinkExtension from '@tiptap/extension-link';
 import './tiptap.css';
 import { FaBold, FaItalic, FaListUl, FaTrash, FaEdit, FaEye, FaImage, FaHighlighter, FaSearch, FaPlus } from 'react-icons/fa';
+import bcrypt from 'bcryptjs';
 
 interface Item {
   id?: string;
@@ -39,33 +40,174 @@ type PublicationItem = {
   createdAt?: any;
 };
 
+const ADMIN_USERNAME = 'admin';
+// This is a hashed version of the password using bcrypt
+// You should replace this hash with your own generated one
+const ADMIN_PASSWORD_HASH = '$2a$12$0/XsiK0crDaufupOjDvqIeBADPmoRTdRckPkVGtrXerVZS/SAjHhy'; // This is a hash of "admin123"
+
 export default function AdminDashboard() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
   const [tab, setTab] = useState<CollectionType>('blog');
   const [search, setSearch] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<Item | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+
+    if (username !== ADMIN_USERNAME) {
+      setError('Invalid credentials');
+      return;
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, ADMIN_PASSWORD_HASH);
+    if (!isPasswordValid) {
+      setError('Invalid credentials');
+      return;
+    }
+
+    setIsAuthenticated(true);
+    // Store in session storage so refresh doesn't log out
+    sessionStorage.setItem('adminAuthenticated', 'true');
+  };
+
+  // Check session storage on component mount
+  useEffect(() => {
+    if (sessionStorage.getItem('adminAuthenticated') === 'true') {
+      setIsAuthenticated(true);
+    }
+  }, []);
+
+  if (!isAuthenticated) {
+    return (
+      <div style={{ 
+        minHeight: '100vh', 
+        background: '#f0f0f0', 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center' 
+      }}>
+        <div style={{ 
+          background: '#fff',
+          padding: '32px',
+          borderRadius: '12px',
+          boxShadow: '0 4px 24px rgba(0,0,0,0.1)',
+          width: '100%',
+          maxWidth: '360px'
+        }}>
+          <h1 style={{ 
+            color: '#283545', 
+            marginBottom: '24px', 
+            textAlign: 'center',
+            fontSize: '24px',
+            fontWeight: 700
+          }}>
+            Admin Login
+          </h1>
+          <form onSubmit={handleLogin}>
+            <div style={{ marginBottom: '16px' }}>
+              <input
+                type="text"
+                placeholder="Username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  border: '1px solid #ddd',
+                  borderRadius: '6px',
+                  fontSize: '16px',
+                  boxSizing: 'border-box'
+                }}
+              />
+            </div>
+            <div style={{ marginBottom: '16px' }}>
+              <input
+                type="password"
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  border: '1px solid #ddd',
+                  borderRadius: '6px',
+                  fontSize: '16px',
+                  boxSizing: 'border-box'
+                }}
+              />
+            </div>
+            {error && (
+              <div style={{ 
+                color: '#e74c3c', 
+                marginBottom: '16px', 
+                fontSize: '14px',
+                textAlign: 'center' 
+              }}>
+                {error}
+              </div>
+            )}
+            <button
+              type="submit"
+              style={{
+                width: '100%',
+                padding: '12px',
+                background: '#646cff',
+                color: '#fff',
+                border: 'none',
+                borderRadius: '6px',
+                fontSize: '16px',
+                fontWeight: 600,
+                cursor: 'pointer'
+              }}
+            >
+              Login
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div style={{ background: '#fff', minHeight: '100vh', padding: 0, overflowX: 'hidden', boxSizing: 'border-box', display: 'flex', justifyContent: 'center' }}>
       <div style={{ maxWidth: 900, width: '100%', padding: '2rem 1rem', boxSizing: 'border-box', overflowX: 'hidden' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 24, flexWrap: 'wrap' }}>
-          <div style={{ background: '#f7f7fa', borderRadius: 8, boxShadow: '0 2px 8px #0001', padding: '12px 20px', display: 'flex', alignItems: 'center', flex: 1, minWidth: 0, overflow: 'hidden' }}>
-            <FaSearch style={{ color: '#646cff', fontSize: 18, marginRight: 8 }} />
-            <input
-              type="text"
-              placeholder="Search..."
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              style={{ border: 'none', outline: 'none', background: 'transparent', fontSize: 18, flex: 1, color: '#222', minWidth: 0 }}
-            />
-            <AdminTabs tab={tab} setTab={setTab} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 24, flexWrap: 'wrap', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16, flex: 1 }}>
+            <div style={{ background: '#f7f7fa', borderRadius: 8, boxShadow: '0 2px 8px #0001', padding: '12px 20px', display: 'flex', alignItems: 'center', flex: 1, minWidth: 0, overflow: 'hidden' }}>
+              <FaSearch style={{ color: '#646cff', fontSize: 18, marginRight: 8 }} />
+              <input
+                type="text"
+                placeholder="Search..."
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                style={{ border: 'none', outline: 'none', background: 'transparent', fontSize: 18, flex: 1, color: '#222', minWidth: 0 }}
+              />
+              <AdminTabs tab={tab} setTab={setTab} />
+            </div>
           </div>
-          <button
-            onClick={() => { setModalOpen(true); setEditingItem(null); }}
-            style={{ background: '#646cff', color: '#fff', border: 'none', borderRadius: 8, padding: '12px 20px', fontWeight: 600, fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}
-          >
-            <FaPlus /> New
-          </button>
+          <div style={{ display: 'flex', gap: 16 }}>
+            <button
+              onClick={() => { setModalOpen(true); setEditingItem(null); }}
+              style={{ background: '#646cff', color: '#fff', border: 'none', borderRadius: 8, padding: '12px 20px', fontWeight: 600, fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}
+            >
+              <FaPlus /> New
+            </button>
+            <button
+              onClick={() => {
+                sessionStorage.removeItem('adminAuthenticated');
+                setIsAuthenticated(false);
+              }}
+              style={{ background: '#e74c3c', color: '#fff', border: 'none', borderRadius: 8, padding: '12px 20px', fontWeight: 600, fontSize: 18, cursor: 'pointer' }}
+            >
+              Logout
+            </button>
+          </div>
         </div>
         <AdminSection
           key={tab + refreshKey}
